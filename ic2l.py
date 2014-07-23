@@ -111,6 +111,8 @@ if __name__ == '__main__':
     entries = []
     with open(args['<input>'], 'rb') as f:
         reader = unicode_csv_reader(f, delimiter=',', quotechar='"')
+        # skip header
+        reader.next()
         for row in reader:
             entries.append(Entry(row))
     with open(outputfile, 'w') as f:
