@@ -18,6 +18,7 @@ Options:
   -v, --verbose   Show version.
 '''
 from docopt import docopt
+import os
 import re
 import csv
 
@@ -30,7 +31,13 @@ ROW_COMMENT = 10
 POST_ACCOUNT_ALIGNMENT = ' '*4
 POST_AMOUNT_ALIGNMENT = 62
 
+gverbose = False
 gaccount = ''
+
+
+def output(line):
+    if gverbose:
+        print line
 
 
 class Entry(object):
@@ -50,6 +57,7 @@ class Entry(object):
 
     def write(self, f):
         a = self._compute_amount_alignment()
+        output(u'{0} {1}'.format(self._date, self._payee))
         o = unicode(
             '\n'
             '{0} * {1}{2}\n'
@@ -96,11 +104,18 @@ def unicode_csv_reader(unicode_csv_data, dialect=csv.excel, **kwargs):
 if __name__ == '__main__':
     args = docopt(__doc__, version='iCompta to Ledger (ic2l) v0.1')
     gaccount = args['<account>']
+    gverbose = args['--verbose']
+    outputfile = args['-o']
+    if not outputfile:
+        outputfile = os.path.splitext(args['<input>'])[0] + '.ledger'
     entries = []
     with open(args['<input>'], 'rb') as f:
         reader = unicode_csv_reader(f, delimiter=',', quotechar='"')
         for row in reader:
             entries.append(Entry(row))
-    with open('test.ledger', 'w') as f:
+    with open(outputfile, 'w') as f:
         for e in entries:
             e.write(f)
+    output('Posts found: {0}'.format(len(entries)))
+    print('Conversion has been successfully written to \"{0}\"'
+          .format(outputfile))
